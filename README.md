@@ -1,14 +1,24 @@
 # Saturn
 
+React and TypeScript day planner with local task storage, weather lookup, mood check-ins, and focus and breathing timers.
+
+## Overview
+
 Plan your day. Find your calm. Saturn combines weather, daily planning, mood check-ins, focus, breathing, and a positive Magic 8 Ball. Built with React 19, TypeScript, Vinext, and the existing Cloudflare Workers runtime. No desktop packaging exists.
 
-## UI Preview
+## Features
 
-**Source-generated UI preview — not an actual application screenshot.** Reconstructed from the UI source, existing styles, and icons without launching the application. Shows the initial empty state before browser hydration, with placeholder date/time and no live weather or saved tasks.
+- Schedule, complete, remove, and undo removal of daily tasks.
+- Persist tasks and mood check-ins in the current browser.
+- Look up weather by city or explicitly requested device location.
+- Run a 25-minute focus timer and guided breathing session.
+- Use built-in encouragement with an optional server-side AI path.
 
-![Saturn main interface — source-generated UI preview](docs/screenshots/main-interface.png)
+## Technologies
 
-## Setup and launch
+TypeScript, React 19, Vinext, Vite, Tailwind CSS, Cloudflare Workers, browser local storage, and Open-Meteo.
+
+## Getting Started
 
 Use Node.js 22.13+ and pnpm 11.25.0. Run from this repository's root:
 
@@ -19,7 +29,7 @@ pnpm.cmd dev
 
 Development: **http://localhost:5173**. On macOS/Linux replace `pnpm.cmd` with `pnpm`. Stop with Ctrl+C. If pnpm reports an unexpected store after moving the checkout, reinstall dependencies in the current folder; do not change global pnpm settings.
 
-## Local production release
+### Build or run from source
 
 ```powershell
 pnpm.cmd build
@@ -28,7 +38,7 @@ pnpm.cmd start
 
 Open **http://127.0.0.1:8787**. Output: `dist/client/` and `dist/server/`, including `dist/server/wrangler.json`. Keep both folders together. `start` runs the built Worker locally and does not deploy. Vinext's route-classification notice is informational. No installer is generated.
 
-## Usage and persistence
+## Usage
 
 - **Daily plan:** add a task with AM/PM scheduling. Tasks sort by time. Check to complete, remove with the trash button, and undo the last removal while the tab is open.
 - **Saving:** tasks and mood are stored in this browser on this origin. Your plan stays until you remove its items; midnight does not erase it. No account, cloud sync, or daily archive is provided. Clearing site data or changing browser/port creates a different storage context. Save failures show a warning. Corrupt saved data is not silently overwritten. Keep the tab open if saving fails.
@@ -91,3 +101,7 @@ Browser access was later rejected by automatic approval review after permissions
 - `scripts/`, `build/`, `vite.config.ts`: existing runtime
 
 The accidental nested project under `app/` was removed, leaving one application and dependency manifest.
+
+## Project Status
+
+Functional prototype. Run locally from source; no desktop package or GitHub release is available.
