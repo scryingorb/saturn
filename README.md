@@ -14,6 +14,12 @@ Plan your day. Find your calm. Saturn combines weather, daily planning, mood che
 - Run a 25-minute focus timer and guided breathing session.
 - Use built-in encouragement with an optional server-side AI path.
 
+## UI Preview
+
+**Source-generated UI preview — not an actual application screenshot.** Reconstructed from the UI source, existing styles, and icons without launching the application. Shows the initial empty state before browser hydration, with placeholder date/time and no live weather or saved tasks.
+
+![Saturn main interface — source-generated UI preview](docs/screenshots/main-interface.png)
+
 ## Technologies
 
 TypeScript, React 19, Vinext, Vite, Tailwind CSS, Cloudflare Workers, browser local storage, and Open-Meteo.
