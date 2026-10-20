@@ -4,7 +4,7 @@ React and TypeScript day planner with local task storage, weather lookup, mood c
 
 ## Overview
 
-Plan your day. Find your calm. Saturn combines weather, daily planning, mood check-ins, focus, breathing, and a positive Magic 8 Ball. Built with React 19, TypeScript, Vinext, and the existing Cloudflare Workers runtime. No desktop packaging exists.
+Plan your day. Find your calm. Saturn combines weather, daily planning, mood check-ins, focus, breathing, and a positive Magic 8 Ball. Built with React 19, TypeScript, Vite/Vinext, GitHub Pages, and Cloudflare Workers. No desktop packaging exists.
 
 ## Features
 
@@ -58,49 +58,44 @@ Timers reset when the page reloads and do not send notifications. Navigation sta
 
 ## Services and credentials
 
-No variables are required for the default app. City searches and coordinates go directly to Open-Meteo. Location permission is requested only after pressing **Use location**. Tasks and mood stay in browser storage.
+No variables are required for the default app. GitHub Pages uses built-in encouragement unless the public `SATURN_AFFIRMATION_URL` is configured; the optional AI endpoint runs only on Cloudflare. See [deployment instructions](docs/deployment.md). City searches and coordinates go directly to Open-Meteo. Location permission is requested only after pressing **Use location**. Tasks and mood stay in browser storage.
 
 The keyless Open-Meteo integration is for **non-commercial** use and includes attribution. See its [documentation](https://open-meteo.com/en/docs) and [terms](https://open-meteo.com/en/terms). Commercial distribution needs an appropriate subscription and a server-side integration for paid credentials. Never put a secret weather key in browser code.
 
-The existing optional AI path uses server-only Worker bindings. Create a git-ignored `.dev.vars` file at the root:
+The optional AI path uses server-only Worker bindings and an IP rate limiter. Production keys belong in Cloudflare secrets (`pnpm exec wrangler secret put OPENAI_API_KEY --name saturn`), never GitHub Pages variables or build artifacts. For local Worker testing, create a git-ignored `.dev.vars` file at the root:
 
 ```dotenv
 OPENAI_API_KEY=your_server_side_key
 OPENAI_MODEL=gpt-5
 ```
 
-`OPENAI_MODEL` is optional; the existing default is `gpt-5`. For the built server, use `pnpm.cmd start --env-file .dev.vars` to explicitly supply the local file. When configured, questions are sent through `/api/affirmation` to OpenAI. The key stays server-side. Missing credentials, timeouts, and provider failures use built-in encouragement. `.env*` and `.dev.vars*` are ignored by Git; never commit real credentials. AI-provider success remains unverified without a valid key.
+`OPENAI_MODEL` is optional; the existing default is `gpt-5`. For the built server, use `pnpm.cmd start --env-file .dev.vars` to explicitly supply the local file. When configured with the rate-limit binding and client-IP header, questions are sent through `/api/affirmation` to OpenAI. The key stays server-side. Missing credentials, timeouts, and provider failures use built-in encouragement. `.env*` and `.dev.vars*` are ignored by Git; never commit real credentials. AI-provider success remains unverified without a valid key.
 
-## Validation
+## Deployment and validation
+
+Published through GitHub Pages at **https://scryingorb.github.io/saturn/**. See [deployment instructions](docs/deployment.md) for Cloudflare setup, optional server-side AI, custom domains, and reproducible checks.
 
 ```powershell
 pnpm.cmd test
 pnpm.cmd typecheck
 pnpm.cmd lint
+pnpm.cmd build:pages
 pnpm.cmd build
+pnpm.cmd check:cloudflare
+node --experimental-strip-types scripts/check-weather.mjs
 ```
 
-Tests cover noon/midnight conversion, saved-task round-tripping and corruption, background timer catch-up, and missing weather values. Local production HTTP checks cover the page, built-in affirmation, and invalid input. Real Open-Meteo geocoding and forecast requests also succeeded.
+Production verification covers both builds, static asset paths and secret scans, the Cloudflare deployment dry run, production HTTP responses, CORS and invalid API input, and live Open-Meteo geocoding/forecast requests. Fourteen automated tests cover storage persistence across separate Web Storage processes, corrupt/denied/full storage, scheduling, timer catch-up, missing weather values, and server-only AI behavior with a mock provider.
 
-Browser verification completed on the local production build:
-
-- Desktop, 768px tablet, and 390px mobile layouts were visually inspected.
-- Task creation, AM/PM selection, completion/progress, deletion, and undo worked. The disposable QA task was removed without removing the existing task.
-- Tasks retained their time/completion after restarting the server and reloading the browser. Mood selection survived page navigation/reload.
-- Ambiguous city search, explicit region selection, actual forecast rendering, and refresh worked.
-- Simulated offline weather retained the last reading with a last-successful-update label and a helpful error.
-- Focus start/pause/resume/reset and breathing start/pause/continue/completion worked.
-- Magic 8 Ball displayed its built-in answer/source and provided encouragement while offline. Network emulation was restored afterward.
-
-**Remaining manual checks:** actual device location and denied-permission UI; blocked/quota-exceeded browser storage UI; full keyboard/screen-reader traversal; reduced-motion/reduced-transparency preferences; physical mobile touch behavior; a full browser exit/restart; and the optional AI provider with valid credentials. Corrupt task records and timer completion/catch-up are covered by automated tests. The full 25-minute focus interval was not waited out in the browser.
-
-Browser access was later rejected by automatic approval review after permissions changed. The user chose to finish with the verified results rather than continue browser automation. The final small fixes (naming the time form fields and replacing raw offline error text) passed source/build checks; those two fixes were not re-inspected in the browser.
+No computer-use or interactive browser automation was used for this deployment. Browser layout, device geolocation/permission UI, and a real AI-provider response remain outside this verification. The Cloudflare configuration is ready; live Worker deployment requires Cloudflare authentication.
 
 ## Source
 
 - `app/page.tsx`: dashboard and feature flows
 - `app/globals.css`: glass styling and responsive fallbacks
-- `app/api/affirmation/route.ts`: server-only optional AI and built-in replies
+- `app/api/affirmation/route.ts`, `server/affirmation.ts`: server-only optional AI and built-in replies
+- `vite.pages.config.ts`, `static/main.tsx`: static GitHub Pages build
+- `wrangler.json`, `.github/workflows/`: deployment configuration
 - `lib/saturn.ts`: validated task/time/weather helpers
 - `tests/saturn.test.mjs`: focused behavior tests
 - `public/favicon.svg`: Saturn icon
@@ -110,4 +105,4 @@ The accidental nested project under `app/` was removed, leaving one application 
 
 ## Project Status
 
-Functional prototype. Run locally from source; no desktop package or GitHub release is available.
+Functional web prototype with GitHub Pages publishing and an optional Cloudflare Worker. No desktop package or GitHub release is provided.

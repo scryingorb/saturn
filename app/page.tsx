@@ -44,7 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { type Task, to24Hour, normalizeTaskTime, sortTasks, parseTasks, remainingSeconds, weatherValues } from "@/lib/saturn";
+import { type Task, to24Hour, normalizeTaskTime, sortTasks, readPlannerStorage, writePlannerStorage, remainingSeconds, weatherValues } from "@/lib/saturn";
 
 type Place = { name: string; latitude: number; longitude: number; admin1?: string; country?: string };
 
@@ -142,7 +142,11 @@ function WeatherIcon({ code, className = "" }: { code: number; className?: strin
 }
 
 async function requestFortune(question: string): Promise<Fortune> {
-  const response = await fetch("/api/affirmation", {
+  const endpoint = typeof __SATURN_AFFIRMATION_URL__ === "undefined" ? "/api/affirmation" : __SATURN_AFFIRMATION_URL__;
+  if (!endpoint) {
+    return { message: "Start with one small, kind step. You can find your way forward without knowing every answer.", source: "built-in" };
+  }
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question }),
@@ -217,10 +221,9 @@ export default function Home() {
 
     // Browser-only hydration intentionally happens after the server render.
     const restore = () => { try {
-      const savedTasks = localStorage.getItem("saturn.tasks");
-      const savedMood = localStorage.getItem("saturn.mood");
-      if (savedTasks) setTasks(parseTasks(savedTasks));
-      if (savedMood && MOODS.some((item) => item.label === savedMood)) setMood(savedMood);
+      const saved = readPlannerStorage(localStorage, MOODS.map(item => item.label));
+      setTasks(saved.tasks);
+      setMood(saved.mood);
       storageReady.current = true;
     } catch {
       setStorageError("Saved data could not be read. Your previous data is untouched; changes in this session may not survive closing Saturn.");
@@ -235,8 +238,7 @@ export default function Home() {
   useEffect(() => {
     if (!hydrated || !storageReady.current) return;
     const persist = () => { try {
-      localStorage.setItem("saturn.tasks", JSON.stringify(tasks));
-      localStorage.setItem("saturn.mood", mood);
+      writePlannerStorage(localStorage, tasks, mood);
       setStorageError("");
     } catch {
       setStorageError("Changes could not be saved on this device. Keep this tab open and free up browser storage before trying again.");

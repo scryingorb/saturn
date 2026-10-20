@@ -1,0 +1,56 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm build
+      - run: pnpm check:cloudflare
+      - name: Build and inspect static site
+        run: pnpm build:pages
+        env:
+          PAGES_BASE_PATH: /saturn/
+          SATURN_AFFIRMATION_URL: ${{ vars.SATURN_AFFIRMATION_URL }}
+          # A non-secret canary proves server credentials cannot enter the artifact.
+          OPENAI_API_KEY: saturn-ci-server-only-canary-not-a-real-key
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-dist
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4

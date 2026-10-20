@@ -15,7 +15,6 @@ const managedLinux = readExecutionProfile() === "managed-linux";
 
 const localBindingConfig = {
   main: "vinext/server/fetch-handler",
-  compatibility_flags: ["nodejs_compat"],
   d1_databases: d1
     ? [
         {
@@ -59,6 +58,7 @@ export default defineConfig(async () => {
       vinext(),
       sites({ mockAuth: false }),
       cloudflare({
+        configPath: "wrangler.json",
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,
         config: localBindingConfig,

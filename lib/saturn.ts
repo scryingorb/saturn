@@ -30,6 +30,20 @@ export function parseTasks(raw: string): Task[] {
   return sortTasks(value.map((task) => ({ ...task, time: normalizeTaskTime(task.time) })));
 }
 
+export function readPlannerStorage(storage: Pick<Storage, "getItem">, allowedMoods: string[]) {
+  const rawTasks = storage.getItem("saturn.tasks");
+  const rawMood = storage.getItem("saturn.mood");
+  return {
+    tasks: rawTasks ? parseTasks(rawTasks) : [],
+    mood: rawMood && allowedMoods.includes(rawMood) ? rawMood : "",
+  };
+}
+
+export function writePlannerStorage(storage: Pick<Storage, "setItem">, tasks: Task[], mood: string) {
+  storage.setItem("saturn.tasks", JSON.stringify(tasks));
+  storage.setItem("saturn.mood", mood);
+}
+
 export function remainingSeconds(deadline: number, now = Date.now()) {
   return Math.max(0, Math.ceil((deadline - now) / 1000));
 }

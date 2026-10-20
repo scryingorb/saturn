@@ -40,3 +40,12 @@ test("missing weather is never converted to fabricated zero values", () => {
   assert.throws(() => weatherValues({ ...data, current: { ...data.current, temperature_2m: null } }));
   assert.throws(() => weatherValues({}));
 });
+
+test("weather rejects non-finite values and missing daily measurements", () => {
+  const data = { current: { temperature_2m: 71, apparent_temperature: 70, weather_code: 0, wind_speed_10m: 3 }, daily: { temperature_2m_max: [75], temperature_2m_min: [60] } };
+  for (const invalid of [NaN, Infinity, -Infinity, "71", undefined]) {
+    assert.throws(() => weatherValues({ ...data, current: { ...data.current, temperature_2m: invalid } }));
+  }
+  assert.throws(() => weatherValues({ ...data, daily: {} }));
+  assert.equal(weatherValues(data).precipitation, null);
+});
